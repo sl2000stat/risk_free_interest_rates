@@ -1,0 +1,10 @@
+<ConditionMonitoring>
+	<initID>
+
+        <DB server  = "fbv-cram-db1.fbv.kit.edu\ORIGINALDATA,50128"
+		database  = "master"
+		username  = "uxqno"
+		password  = "qk8%8ICe5mT!"/>
+
+	</initID>
+</ConditionMonitoring>
