@@ -32,6 +32,9 @@ for i in range(len(df) - 1):
     # if the strike prices and expiration dates are equal
     if df["strike"].iloc[i] == df["strike"].iloc[i + 1] and df["expiration"].iloc[i] == df["expiration"].iloc[i + 1]:
 
+        # first_maturuity:
+        first_maturity = int((df["expiration"].iloc[5] - df["quote_datetime"].iloc[5]) / np.timedelta64(1, "D"))
+
         # get the put and call price and calculate their difference
         if df["option_type"].iloc[i] == "P" and df["option_type"].iloc[i+1] == "C":
             put_call = df["bid"].iloc[i] - df["ask"].iloc[i+1]
@@ -40,7 +43,10 @@ for i in range(len(df) - 1):
         if df["option_type"].iloc[i] == "C" and df["option_type"].iloc[i+1] == "P":
             put_call = df["bid"].iloc[i+1] - df["ask"].iloc[i]
 
-        maturity = (df["expiration"].iloc[i] - df["quote_datetime"].iloc[i]) / np.timedelta64(1, "D")
+        maturity = int((df["expiration"].iloc[i] - df["quote_datetime"].iloc[i]) / np.timedelta64(1, "D"))
+
+        if maturity != first_maturity:
+            break
 
         # save the data in a dictionary
         data = {"strike": df["strike"].iloc[i], "pi_ci": put_call,"maturity": maturity}
@@ -51,7 +57,7 @@ for i in range(len(df) - 1):
 # convert the data into a df
 df_final = pd.DataFrame(save_data)
 
-print(df_final)
+# print(df_final)
 
 # ensure numeric data
 df_final["strike"] = pd.to_numeric(df_final["strike"])
@@ -78,7 +84,7 @@ model = regression.REGRESSION(df_final)
 model.fit_REG()
 
 # print the summary results
-# model.display_Regression_Table()
+model.display_Regression_Table()
 
 
 sns.lmplot(x="strike", y="pi_ci", data=df_final, x_jitter=.05)

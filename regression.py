@@ -17,7 +17,7 @@ class REGRESSION():
     def fit_REG(self):
 
         # time to maturity
-        self.T = 2
+        self.T = self.df["maturity"].mean()
 
         # create the model
         model = sm.ols(formula='pi_ci ~ strike', data=self.df)
@@ -50,7 +50,7 @@ class REGRESSION():
 
 
         print("" * 20)
-        print(f" The continuously compounded risk free interest rate for Maturity {self.T} is: {round(self.r_t,4)}")
+        print(f" The continuously compounded risk free interest rate for Maturity {self.T} is: {round(self.r_t*100,4)} %")
         print("" * 20)
         return None
 
