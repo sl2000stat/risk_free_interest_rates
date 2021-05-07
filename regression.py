@@ -6,6 +6,7 @@ Description: cross-sectional regression functions and estimation of r
 """
 
 import statsmodels.formula.api as sm
+import numpy as np
 
 class REGRESSION():
 
@@ -14,6 +15,9 @@ class REGRESSION():
         return None
 
     def fit_REG(self):
+
+        # time to maturity
+        self.T = 2
 
         # create the model
         model = sm.ols(formula='pi_ci ~ strike', data=self.df)
@@ -36,10 +40,18 @@ class REGRESSION():
 
         self.residuals = results.resid
 
+        # calculate the risk free rate
+        self.r_t = -1 / self.T * np.log(self.beta)
+
         return None
 
     def display_Regression_Table(self):
         print(self.__summary_table)
+
+
+        print("" * 20)
+        print(f" The continuously compounded risk free interest rate for Maturity {self.T} is: {round(self.r_t,4)}")
+        print("" * 20)
         return None
 
 

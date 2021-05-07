@@ -70,6 +70,10 @@ def get_df():
     # convert the data into a df
     df = pd.DataFrame(data)
 
+    # adjust the time coolumns
+    df["quote_datetime"] = pd.to_datetime(df["quote_datetime"], errors = "coerce")
+    df["expiration"] = pd.to_datetime(df["expiration"], errors="coerce")
+
     # group the data by expiration date and strike price
     df.groupby(["quote_datetime","expiration", "strike"], axis=1)
 
