@@ -16,6 +16,8 @@ class REGRESSION():
 
     def fit_REG(self):
 
+        """This function fits the regression model and calculates the risk free rate"""
+
         # time to maturity
         self.T = self.df["maturity"].mean()
 
@@ -40,18 +42,30 @@ class REGRESSION():
 
         self.residuals = results.resid
 
-        # calculate the risk free rate
-        self.r_t = -1 / self.T * np.log(self.beta)
+        if self.T != 0:
+            # calculate the risk free rate
+            self.r_t = -1 / self.T * np.log(self.beta)
+
+        else:
+            print("Couldn't calculate the risk free rate , because the maturity is 0.")
+            self.r_t = 0
+
+
 
         return None
 
     def display_Regression_Table(self):
+
+        """Simple printing function"""
+
         print(self.__summary_table)
-
-
         print("" * 20)
-        print(f" The continuously compounded risk free interest rate for Maturity {self.T} is: {round(self.r_t*100,4)} %")
+        print(f" The continuously compounded risk free interest rate for Maturity {self.T} days is: {round(self.r_t*100,4)} %")
         print("" * 20)
+        print(
+            f" The continuously compounded risk free annualized interest rate for Maturity {self.T} days is: {round(self.r_t * 365 * 100, 4)} %")
+        print("" * 20)
+
         return None
 
 

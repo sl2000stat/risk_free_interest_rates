@@ -9,7 +9,6 @@ import database
 from config.config_utils import ConfigUtils
 import pyodbc
 import pandas as pd
-import other_functions
 
 def get_df():
 
@@ -30,7 +29,7 @@ def get_df():
                 "number_of_exchanges",
                 "sonstiges"]
 
-    # things for saving the data
+    # things for saving the data (empty array)
     data = []
 
     try:
@@ -76,9 +75,6 @@ def get_df():
 
     # group the data by expiration date and strike price
     df.groupby(["quote_datetime","expiration", "strike"], axis=1)
-
-    # set the time column as index
-    # df = other_functions.set_time_index(df,"quote_datetime")
 
     # sort the dataframe
     # df.sort_index(inplace = True)

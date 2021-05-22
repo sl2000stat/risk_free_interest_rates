@@ -12,7 +12,6 @@ import seaborn as sns
 import regression
 import numpy as np
 
-
 # color palette
 cmap = sns.color_palette("rocket")
 sns.set_theme(palette = cmap)
@@ -20,82 +19,105 @@ sns.set_theme(palette = cmap)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
+# things for saving the data
+save_data = []
+save_df = {}
+
 # get the dataframe
 df = get_df.get_df()
 
-# things for saving the data
-save_data = []
+# calcualte the matrutiy
+df["maturity"] = [int((df["expiration"].iloc[j] - df["quote_datetime"].iloc[j]) / np.timedelta64(1, "D")) for j in range(len(df))]
 
-# moving window approach
-for i in range(len(df) - 1):
+# get the unique maturity values as a list
+unique_maturity = df["maturity"].unique()
 
-    # if the strike prices and expiration dates are equal
-    if df["strike"].iloc[i] == df["strike"].iloc[i + 1] and df["expiration"].iloc[i] == df["expiration"].iloc[i + 1]:
+# split the dataframe into smaller dataframes with the same maturity and save all the dataframes ina dictionary
+for mat in unique_maturity:
+    save_df[mat] = df[df["maturity"] == mat]
 
-        # first_maturuity:
-        first_maturity = int((df["expiration"].iloc[5] - df["quote_datetime"].iloc[5]) / np.timedelta64(1, "D"))
+# for each dataframe in save_df do:
+for mat in save_df:
 
-        # get the put and call price and calculate their difference
-        if df["option_type"].iloc[i] == "P" and df["option_type"].iloc[i+1] == "C":
-            put_call = df["bid"].iloc[i] - df["ask"].iloc[i+1]
+    # get the dataframe
+    df = save_df[mat]
 
-        # get the put and call price and calculate their difference
-        if df["option_type"].iloc[i] == "C" and df["option_type"].iloc[i+1] == "P":
-            put_call = df["bid"].iloc[i+1] - df["ask"].iloc[i]
+    # moving window approach
+    for i in range(len(df) - 1):
 
-        maturity = int((df["expiration"].iloc[i] - df["quote_datetime"].iloc[i]) / np.timedelta64(1, "D"))
+        # if the strike prices and expiration dates are equal
+        if df["strike"].iloc[i] == df["strike"].iloc[i + 1]:
 
-        if maturity != first_maturity:
-            break
+            # get the put and call price and calculate their difference
+            if df["option_type"].iloc[i] == "P" and df["option_type"].iloc[i + 1] == "C":
+                put_call = df["bid"].iloc[i] - df["ask"].iloc[i + 1]
 
-        # save the data in a dictionary
-        data = {"strike": df["strike"].iloc[i], "pi_ci": put_call,"maturity": maturity}
+            # get the put and call price and calculate their difference
+            elif df["option_type"].iloc[i] == "C" and df["option_type"].iloc[i + 1] == "P":
+                put_call = df["bid"].iloc[i + 1] - df["ask"].iloc[i]
 
-        # append the dictionary to the data list
-        save_data.append(data)
+            else:
+                pass
 
-# convert the data into a df
-df_final = pd.DataFrame(save_data)
+            # save the data in a dictionary (Maturity being a constant value)
+            data = {"strike": df["strike"].iloc[i], "pi_ci": put_call, "maturity": df["maturity"].iloc[1]}
 
-# print(df_final)
+            # append the dictionary to the data list
+            save_data.append(data)
 
-# ensure numeric data
-df_final["strike"] = pd.to_numeric(df_final["strike"])
-df_final["pi_ci"] = pd.to_numeric(df_final["pi_ci"])
+        else:
+            pass
 
-# # # # # #
+    # convert the data into a df
+    df_final = pd.DataFrame(save_data)
 
-"plotting"
+    # ensure numeric data
+    df_final["strike"] = pd.to_numeric(df_final["strike"])
+    df_final["pi_ci"] = pd.to_numeric(df_final["pi_ci"])
 
-#get the scatter plot
-sns.scatterplot(data=df_final,x = "strike",y="pi_ci")
+    # # # # # #
 
-plt.title(f"Scatterplot of the S&P 500 option Data:")
-plt.xlabel(f"Strike Price:")
-plt.ylabel(f"Put Price - Call Price:")
-# plt.show()
+    "plotting"
 
-# # # # # #
+    # scatterplot of the original data
+    sns.scatterplot(data=df_final, x="strike", y="pi_ci")
+    plt.title(f"Scatterplot of the S&P 500 option Data:")
+    plt.xlabel(f"Strike Price:")
+    plt.ylabel(f"Put Price - Call Price:")
+    # plt.show()
 
-# create the regression model
-model = regression.REGRESSION(df_final)
+    # # # # # #
 
-# fit the model
-model.fit_REG()
+    # create the regression model
+    model = regression.REGRESSION(df_final)
 
-# print the summary results
-model.display_Regression_Table()
+    # fit the model
+    model.fit_REG()
+
+    # print the summary results
+    model.display_Regression_Table()
+
+    # # # # # #
+
+    # plot a linear regression
+    sns.lmplot(x="strike", y="pi_ci", data=df_final, x_jitter=.05)
+    plt.title(f"Linear Regression plot of the S&P 500 option Data:")
+    plt.xlabel(f"Strike Price:")
+    plt.ylabel(f"Put Price - Call Price:")
+    # plt.show()
+
+    # plot the residuals
+    sns.residplot(x="strike", y="pi_ci", data=df_final, scatter_kws={"s": 80})
+    plt.title(f"Residualplot of the S&P 500 option Data:")
+    plt.xlabel(f"Strike Price:")
+    plt.ylabel(f"Put Price - Call Price:")
+    # plt.show()
+
+    # clear the array values
+    save_data = []
 
 
-sns.lmplot(x="strike", y="pi_ci", data=df_final, x_jitter=.05)
-plt.title(f"Linear Regression plot of the S&P 500 option Data:")
-plt.xlabel(f"Strike Price:")
-plt.ylabel(f"Put Price - Call Price:")
-# plt.show()
 
 
-sns.residplot(x="strike", y="pi_ci", data=df_final,scatter_kws={"s": 80})
-plt.title(f"Residualplot of the S&P 500 option Data:")
-plt.xlabel(f"Strike Price:")
-plt.ylabel(f"Put Price - Call Price:")
-# plt.show()
+
+
