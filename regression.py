@@ -18,8 +18,11 @@ class REGRESSION():
 
         """This function fits the regression model and calculates the risk free rate"""
 
-        # time to maturity
-        self.T = self.df["maturity"].mean()
+        # time to maturity: there should be only one value so first value is good enough
+        self.T = self.df["maturity"].iloc[0]
+
+        # time: there should be only one value, there should be only one value so first value is good enough
+        self.time = self.df["quote_datetime"].iloc[0]
 
         # create the model
         model = sm.ols(formula='pi_ci ~ strike', data=self.df)
@@ -42,15 +45,15 @@ class REGRESSION():
 
         self.residuals = results.resid
 
+        # check for 0 division
         if self.T != 0:
+
             # calculate the risk free rate
             self.r_t = -1 / self.T * np.log(self.beta)
 
         else:
             print("Couldn't calculate the risk free rate , because the maturity is 0.")
             self.r_t = 0
-
-
 
         return None
 

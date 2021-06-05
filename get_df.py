@@ -23,11 +23,11 @@ def get_df():
     driver = "{ODBC Driver 17 for SQL Server}"
 
     # define the name of the columns
-    colnames = ["underlying_symbol", "quote_datetime", "root", "expiration", "strike", "option_type", "open", "high",
-                "low", "close",
-                "trade_volume", "bid_size", "bid", "ask_size", "ask", "underlying_bid", "underlying_ask",
-                "number_of_exchanges",
-                "sonstiges"]
+    # colnames = ["underlying_symbol", "quote_datetime", "root", "expiration", "strike", "option_type", "open", "high",
+    #             "low", "close",
+    #             "trade_volume", "bid_size", "bid", "ask_size", "ask", "underlying_bid", "underlying_ask",
+    #             "number_of_exchanges",
+    #             "sonstiges"]
 
     # things for saving the data (empty array)
     data = []
@@ -55,13 +55,26 @@ def get_df():
 
     # for each row do:
     for row in rows:
-        dict_data = {'underlying_symbol': row[0], 'quote_datetime': row[1], 'root': row[2], 'expiration': row[3],
-                     'strike': row[4], 'option_type': row[5], 'open': row[6], 'high': row[7], 'low': row[8],
-                     'close': row[9],
-                     'trade_volume': row[10], 'bid_size': row[11],
-                     'bid': row[12], 'ask_size': row[13], 'ask': row[14],
-                     'underlying_bid': row[15], 'underlying_ask': row[16],
-                     'number_of_exchanges': row[17], 'sonstiges': row[18]}
+        dict_data = {'underlying_symbol': row[0],
+                     'quote_datetime': row[1],
+                     # 'root': row[2],
+                     'expiration': row[3],
+                     'strike': row[4],
+                     'option_type': row[5],
+                     # 'open': row[6],
+                     # 'high': row[7],
+                     # 'low': row[8],
+                     # 'close': row[9],
+                     # 'trade_volume': row[10],
+                     # 'bid_size': row[11],
+                     'bid': row[12],
+                     # 'ask_size': row[13],
+                     'ask': row[14],
+                     # 'underlying_bid': row[15],
+                     # 'underlying_ask': row[16],
+                     # 'number_of_exchanges': row[17],
+                     # 'sonstiges': row[18]
+                     }
 
         # append to data
         data.append(dict_data)
@@ -73,12 +86,16 @@ def get_df():
     df["quote_datetime"] = pd.to_datetime(df["quote_datetime"], errors = "coerce")
     df["expiration"] = pd.to_datetime(df["expiration"], errors="coerce")
 
-    # group the data by expiration date and strike price
-    df.groupby(["quote_datetime","expiration", "strike"], axis=1)
+    # ensure numeric data
+    df["strike"] = pd.to_numeric(df["strike"])
+    df["bid"] = pd.to_numeric(df["bid"])
+    df["ask"] = pd.to_numeric(df["ask"])
 
-    # sort the dataframe
+    # sort the dataframe by quote_datetime (already done)
     # df.sort_index(inplace = True)
 
     # print(df)
+    print("Data recieved sucessfully.")
+    print("*" * 10)
 
     return df
