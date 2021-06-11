@@ -91,9 +91,6 @@ def get_df():
     df["bid"] = pd.to_numeric(df["bid"])
     df["ask"] = pd.to_numeric(df["ask"])
 
-    # sort the dataframe by quote_datetime (already done)
-    # df.sort_index(inplace = True)
-
     # print(df)
     print("Data recieved sucessfully.")
     print("*" * 10)

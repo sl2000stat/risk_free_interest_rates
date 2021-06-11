@@ -7,6 +7,7 @@ Description: cross-sectional regression functions and estimation of r
 
 import statsmodels.formula.api as sm
 import numpy as np
+import matplotlib.pyplot as plt
 
 class REGRESSION():
 
@@ -45,10 +46,15 @@ class REGRESSION():
 
         self.residuals = results.resid
 
+        self.pred = self.df["pi_ci"] - self.residuals
+
         # check for 0 division
         if self.T != 0:
 
-            # calculate the risk free rate
+            # make the maturity daily_
+            self.T = self.T / (60*24)
+
+            # calculate the risk free rate with daily maturities
             self.r_t = -1 / self.T * np.log(self.beta)
 
         else:
@@ -63,11 +69,21 @@ class REGRESSION():
 
         print(self.__summary_table)
         print("" * 20)
-        print(f" The continuously compounded risk free interest rate for Maturity {self.T} days is: {round(self.r_t*100,4)} %")
-        print("" * 20)
+        print(f" The continuously compounded risk free interest rate for Maturity {int(self.T/ (60*24))} days is: {round(self.r_t*100,4)} %")
         print(
-            f" The continuously compounded risk free annualized interest rate for Maturity {self.T} days is: {round(self.r_t * 365 * 100, 4)} %")
+            f" The continuously compounded risk free annualized interest rate for Maturity {int(self.T/ (60*24))} days is: {round(self.r_t * 365 * 100, 4)} %")
         print("" * 20)
+
+        return None
+
+    def plot_regression_results(self):
+
+        """Simple plotting function not stylized yet"""
+
+        # plotting the regression resuluts
+        plt.scatter(self.df["strike"], self.df["pi_ci"], color='black')
+        plt.plot(self.df["strike"], self.pred, color='blue', linewidth=3)
+        plt.show()
 
         return None
 
