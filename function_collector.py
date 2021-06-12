@@ -5,9 +5,7 @@ Date    : 05.06.2021
 Description: Other functions used in the Code
 """
 
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
+# checked: Function works perfectly
 
 def set_time_index(df, timecolname):
 

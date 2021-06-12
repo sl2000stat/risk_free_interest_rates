@@ -2,17 +2,24 @@
 Name : get_df.py in Project: seminar
 Author : Simon Leiner
 Date    : 06.05.2021
-Description: Get the Dataframe
+Description: Get the Dataframe from the database
 """
 
 import database
 from config.config_utils import ConfigUtils
 import pyodbc
 import pandas as pd
+from datetime import datetime
+
+# checked: Function works perfectly
 
 def get_df():
 
     """This functions gets the Dataframe containing the option information"""
+
+    print("*" * 10)
+    print(f"Starting the process {datetime.now()}")
+    print("*" * 10)
 
     # get the constants from the config file
     cfg = ConfigUtils()
@@ -31,6 +38,22 @@ def get_df():
 
     # things for saving the data (empty array)
     data = []
+
+    # connect to database
+    conn = pyodbc.connect(
+        'DRIVER=' + driver + ';SERVER=' + server + ';DATABASE=' + databasename + ';UID=' + username + ';PWD=' + password)
+
+    # create cursor object
+    cursor = conn.cursor()
+
+    # get the query
+    query = database.sp500_query()
+
+    # execute the query
+    cursor.execute(query)
+
+    # get all data
+    rows = cursor.fetchall()
 
     try:
 
@@ -51,7 +74,12 @@ def get_df():
         rows = cursor.fetchall()
 
     except Exception as e:
-        print("The following Exepction ocurred: " + str(e))
+        rows = []
+        print(f"The following Exepction ocurred: {str(e)}  and if nothing is shown: MemoryError" )
+
+    # if rows object is empty
+    if not rows:
+        raise Exception("Something went wrong with getting the Data.")
 
     # for each row do:
     for row in rows:
@@ -82,7 +110,7 @@ def get_df():
     # convert the data into a df
     df = pd.DataFrame(data)
 
-    # adjust the time coolumns
+    # adjust the time columns
     df["quote_datetime"] = pd.to_datetime(df["quote_datetime"], errors = "coerce")
     df["expiration"] = pd.to_datetime(df["expiration"], errors="coerce")
 
@@ -92,7 +120,7 @@ def get_df():
     df["ask"] = pd.to_numeric(df["ask"])
 
     # print(df)
-    print("Data recieved sucessfully.")
+    print(f"Data recieved sucessfully. ({str(df.shape[0])} rows)")
     print("*" * 10)
 
     return df

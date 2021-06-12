@@ -7,15 +7,8 @@ Description: Chapter 2.2: Constructing Risk free assets in order to estimate the
 
 import pandas as pd
 import get_df
-import matplotlib.pyplot as plt
-import seaborn as sns
 import regression
 import numpy as np
-
-
-# color palette
-cmap = sns.color_palette("rocket")
-sns.set_theme(palette = cmap)
 
 # printing options
 pd.set_option('display.max_columns', 500)
@@ -29,11 +22,8 @@ def get_rf_byput_call():
     :return: Dataframe with rf, Maturity and Time
     """
 
-    # list for saving the matched output needed for the regression
-    save_data = []
-
     # list for saving the results of the regression
-    save_result = []
+    save_result_regression = []
 
     # dictionary for saving the data with different maturity: Dict contains multiple DF
     save_df = {}
@@ -45,33 +35,44 @@ def get_rf_byput_call():
     df["maturity"] = [int((df["expiration"].iloc[j] - df["quote_datetime"].iloc[j]) / np.timedelta64(1, "m")) for j in
                       range(len(df))]
 
+    # sort for maturites
+    df.sort_values(by=["strike","quote_datetime"], inplace=True)
+
+    print("Recieved DF:")
+    print(df.head(5))
+    print("*" * 10)
+
     # get the unique maturity values as a list
     unique_maturity = df["maturity"].unique()
+
+    print(f"There are {len(unique_maturity)} different Maturites")
+    print("*" * 10)
 
     # split the dataframe into smaller dataframes with the same maturity and save all the dataframes ina dictionary
     for mat in unique_maturity:
         save_df[mat] = df[df["maturity"] == mat]
 
-    print("Ready to start with logic.")
+    print("Ready to start with logic:")
+    print("*" * 10)
 
     # for each dataframe in save_df do:
     for mat in save_df:
 
+        # list for saving the matched output needed for the regression
+        save_data_fl = []
+
         # get the dataframe
         df = save_df[mat]
 
-        # for testing
-        if mat == 0:
-            print(df["quote_datetime"])
-            print(df["expiration"])
+        # print(df.head())
+        # print("*" * 10)
 
         # moving window approach
         for i in range(len(df) - 1):
 
             # if the strike prices and expiration dates are equal
             if df["strike"].iloc[i] == df["strike"].iloc[i + 1] and df["quote_datetime"].iloc[i] == \
-                    df["quote_datetime"].iloc[i + 1] and df["expiration"].iloc[i] == \
-                    df["expiration"].iloc[i + 1]:
+                    df["quote_datetime"].iloc[i + 1]:
 
                 # get the put and call price and calculate their difference
                 if df["option_type"].iloc[i] == "P" and df["option_type"].iloc[i + 1] == "C":
@@ -90,55 +91,55 @@ def get_rf_byput_call():
                     , "quote_datetime": df["quote_datetime"].iloc[i]}
 
                 # append the dictionary to the data list
-                save_data.append(data)
+                save_data_fl.append(data)
 
-            # no mathes found
+            # no matches found
             else:
                 pass
 
         # convert the data into a df
-        df_for_regression = pd.DataFrame(save_data)
+        df_for_regression = pd.DataFrame(save_data_fl)
 
-        # print(df_for_regression)
+        # print("DF for regression:")
+        # print(df_for_regression.head())
+        # print("*" * 10)
 
-        # scatterplot of the original data
-        sns.scatterplot(data=df_for_regression, x="strike", y="pi_ci")
-        plt.title(f"Scatterplot of the S&P 500 option Data:")
-        plt.xlabel(f"Strike Price:")
-        plt.ylabel(f"Put Price - Call Price:")
-        # plt.show()
+        # for each minute:
+        for time_ in df_for_regression["quote_datetime"].unique():
 
-        # create the regression model
-        model = regression.REGRESSION(df_for_regression)
+            # subset the data
+            df_for_regression = df_for_regression[df_for_regression["quote_datetime"] == time_]
 
-        # fit the model
-        model.fit_REG()
+            # create the regression model
+            model = regression.REGRESSION(df_for_regression)
 
-        # risk free rate
-        risk_free_rate = model.r_t
+            # fit the model
+            model.fit_REG()
 
-        # time
-        time_t = model.time
+            # print the result
+            # model.display_Regression_Table()
 
-        # save the output in a dictionary (Maturity being a constant value)
-        res = {"risk_free_rate": risk_free_rate, "maturity": mat, "time_t": time_t}
+            # plot the result
+            # model.plot_regression_results()
 
-        # append the dictionary to the data list
-        save_result.append(res)
+            # risk free rate
+            risk_free_rate = model.r_t
 
-        # print the summary results
-        # model.display_Regression_Table()
+            # save the output in a dictionary (Maturity being a constant value)
+            res = {"risk_free_rate": risk_free_rate, "maturity": mat, "time_t": time_}
 
-        # clear the array values and restart the progress
-        save_data = []
+            # append the dictionary to the data list
+            save_result_regression.append(res)
 
     # convert the result data into a df for nicer handling
-    df_result = pd.DataFrame(save_result)
+    df_result = pd.DataFrame(save_result_regression)
 
     print("Finished with estimation.")
+    print("*" * 10)
+
+    # print(df.head(5))
 
     return df_result
-
 
 
 

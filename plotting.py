@@ -31,3 +31,11 @@ from datetime import datetime, timedelta
     plt.xlabel(f"Strike Price:")
     plt.ylabel(f"Put Price - Call Price:")
     # plt.show()
+
+
+# scatterplot of the original data
+        sns.scatterplot(data=df_for_regression, x="strike", y="pi_ci")
+        plt.title(f"Scatterplot of the S&P 500 option Data:")
+        plt.xlabel(f"Strike Price:")
+        plt.ylabel(f"Put Price - Call Price:")
+        # plt.show()

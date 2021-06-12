@@ -8,6 +8,13 @@ Description: cross-sectional regression functions and estimation of r
 import statsmodels.formula.api as sm
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
+
+# checked: Function works perfectly
+
+# color palette
+cmap = sns.color_palette("rocket")
+sns.set_theme(palette = cmap)
 
 class REGRESSION():
 
@@ -22,9 +29,6 @@ class REGRESSION():
         # time to maturity: there should be only one value so first value is good enough
         self.T = self.df["maturity"].iloc[0]
 
-        # time: there should be only one value, there should be only one value so first value is good enough
-        self.time = self.df["quote_datetime"].iloc[0]
-
         # create the model
         model = sm.ols(formula='pi_ci ~ strike', data=self.df)
 
@@ -32,16 +36,16 @@ class REGRESSION():
         results = model.fit()
 
         # get reuslts
-        self.alpha = results.params[0]
+        # self.alpha = results.params[0]
         self.beta = results.params[1]
 
-        self.t_stat_alpha = results.tvalues[0]
-        self.t_stat_beta = results.tvalues[1]
+        # self.t_stat_alpha = results.tvalues[0]
+        # self.t_stat_beta = results.tvalues[1]
 
-        self.alpha_st = results.bse[0]
-        self.beta_st = results.bse[1]
+        # self.alpha_st = results.bse[0]
+        # self.beta_st = results.bse[1]
 
-        self.adjusted_R = results.rsquared
+        # self.adjusted_R = results.rsquared
         self.__summary_table = results.summary()
 
         self.residuals = results.resid
@@ -78,11 +82,19 @@ class REGRESSION():
 
     def plot_regression_results(self):
 
-        """Simple plotting function not stylized yet"""
+        """Simple plotting function"""
+
+        # plotting the df
+        plt.scatter(self.df["strike"], self.df["pi_ci"], color='black', label = "Data")
 
         # plotting the regression resuluts
-        plt.scatter(self.df["strike"], self.df["pi_ci"], color='black')
-        plt.plot(self.df["strike"], self.pred, color='blue', linewidth=3)
+        plt.plot(self.df["strike"], self.pred, color='blue', linewidth=2,label = "Regression")
+
+        # styling
+        plt.title(f"Regression results for Maturity {int(self.T/ (60*24))} days")
+        plt.ylabel("Differnece between Put and Call price")
+        plt.xlabel("Strike Price")
+        plt.legend()
         plt.show()
 
         return None
