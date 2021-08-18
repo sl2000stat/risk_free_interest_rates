@@ -9,12 +9,16 @@ import statsmodels.formula.api as sm
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import warnings
 
 # checked: Function works perfectly
 
 # color palette
 cmap = sns.color_palette("rocket")
 sns.set_theme(palette = cmap)
+
+# surpress warnings
+warnings.filterwarnings("ignore")
 
 class REGRESSION():
 
@@ -55,11 +59,16 @@ class REGRESSION():
         # check for 0 division
         if self.T != 0:
 
-            # make the maturity daily_
-            self.T = self.T / (60*24)
+            # Note maturitiy T is daily, but we got minutly data and thus recieve minutly estimates
+            T = self.T / (24*60)
 
-            # calculate the risk free rate with daily maturities
-            self.r_t = -1 / self.T * np.log(self.beta)
+            if self.beta == 0:
+                print("Couldn't calculate the risk free rate , because the beta is 0.")
+                self.r_t = 0
+
+            else:
+                # calculate the risk free rate with minutely maturites
+                self.r_t = -1 / T * np.log(self.beta)
 
         else:
             print("Couldn't calculate the risk free rate , because the maturity is 0.")
@@ -73,9 +82,9 @@ class REGRESSION():
 
         print(self.__summary_table)
         print("" * 20)
-        print(f" The continuously compounded risk free interest rate for Maturity {int(self.T/ (60*24))} days is: {round(self.r_t*100,4)} %")
+        print(f" The continuously compounded risk free interest rate for Maturity {int(self.T)} days is: {round(self.r_t*100,4)} %")
         print(
-            f" The continuously compounded risk free annualized interest rate for Maturity {int(self.T/ (60*24))} days is: {round(self.r_t * 365 * 100, 4)} %")
+            f" The continuously compounded risk free annualized interest rate for Maturity {int(self.T)} days is: {round(self.r_t * 365 * 100, 4)} %")
         print("" * 20)
 
         return None
@@ -91,9 +100,9 @@ class REGRESSION():
         plt.plot(self.df["strike"], self.pred, color='blue', linewidth=2,label = "Regression")
 
         # styling
-        plt.title(f"Regression results for Maturity {int(self.T/ (60*24))} days")
-        plt.ylabel("Differnece between Put and Call price")
-        plt.xlabel("Strike Price")
+        plt.title(f"Regression results for Maturity {int(self.T)} days at time {self.df.quote_datetime.iloc[0]}")
+        plt.ylabel("Difference between Put and Call price:")
+        plt.xlabel("Strike Price:")
         plt.legend()
         plt.show()
 

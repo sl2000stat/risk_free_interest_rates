@@ -10,6 +10,9 @@ import get_df
 import regression
 import numpy as np
 import get_df_by_files
+from datetime import datetime
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # printing options
 pd.set_option('display.max_columns', 500)
@@ -30,13 +33,14 @@ def get_rf_byput_call():
     save_df = {}
 
     # get the dataframe
-    df = get_df.get_df()
+    # df = get_df.get_df()
+    df = get_df_by_files.get_df()
 
     # calcualte the matrutiy in minutes: D days, m minutes
-    df["maturity"] = [int((df["expiration"].iloc[j] - df["quote_datetime"].iloc[j]) / np.timedelta64(1, "m")) for j in
-                      range(len(df))]
+    df["maturity"] = (df["expiration"] - df["quote_datetime"]) / np.timedelta64(1, "D")
+    df = df.astype({'maturity': 'int64'})
 
-    # sort for maturites
+    # i,...N different strike prices
     df.sort_values(by=["strike","quote_datetime"], inplace=True)
 
     print("Recieved DF:")
@@ -45,6 +49,7 @@ def get_rf_byput_call():
 
     # get the unique maturity values as a list
     unique_maturity = df["maturity"].unique()
+    # unique_maturity = [77]
 
     print(f"There are {len(unique_maturity)} different Maturites")
     print("*" * 10)
@@ -65,8 +70,8 @@ def get_rf_byput_call():
         # get the dataframe
         df = save_df[mat]
 
-        # print(df.head())
-        # print("*" * 10)
+        print(f"Computation for Maturity: {mat}")
+        print("*" * 10)
 
         # moving window approach
         for i in range(len(df) - 1):
@@ -88,7 +93,7 @@ def get_rf_byput_call():
                     pass
 
                 # save the data in a dictionary (Maturity being a constant value, thus the time should also be always the same)
-                data = {"strike": df["strike"].iloc[i], "pi_ci": put_call, "maturity": df["maturity"].iloc[1]
+                data = {"strike": df["strike"].iloc[i], "pi_ci": put_call, "maturity": df["maturity"].iloc[0]
                     , "quote_datetime": df["quote_datetime"].iloc[i]}
 
                 # append the dictionary to the data list
@@ -101,44 +106,45 @@ def get_rf_byput_call():
         # convert the data into a df
         df_for_regression = pd.DataFrame(save_data_fl)
 
-        # print("DF for regression:")
-        # print(df_for_regression.head())
-        # print("*" * 10)
+        print("DF for regression:")
+        print(df_for_regression)
+        print("*" * 10)
+
+        # plotting
+        # sns.scatterplot(data = df_for_regression, x = "quote_datetime", y = "pi_ci")
+        # plt.title("Scatterplot of the Data used for the regression")
+        # plt.show()
 
         # for each minute:
         for time_ in df_for_regression["quote_datetime"].unique():
 
             # subset the data
-            df_for_regression = df_for_regression[df_for_regression["quote_datetime"] == time_]
+            df_new = df_for_regression[df_for_regression["quote_datetime"] == time_]
+            # print(df_new)
 
             # create the regression model
-            model = regression.REGRESSION(df_for_regression)
+            model = regression.REGRESSION(df_new)
 
             # fit the model
             model.fit_REG()
 
             # print the result
-            model.display_Regression_Table()
+            # model.display_Regression_Table()
 
             # plot the result
-            model.plot_regression_results()
-
-            # risk free rate
-            risk_free_rate = model.r_t
+            # model.plot_regression_results()
 
             # save the output in a dictionary (Maturity being a constant value)
-            res = {"risk_free_rate": risk_free_rate, "maturity": mat, "time_t": time_}
+            res = {"risk_free_rate": model.r_t, "maturity": mat, "time_t": time_}
 
             # append the dictionary to the data list
             save_result_regression.append(res)
 
-    # convert the result data into a df for nicer handling
+        # convert the result data into a df for nicer handling
     df_result = pd.DataFrame(save_result_regression)
 
     print("Finished with estimation.")
     print("*" * 10)
-
-    # print(df.head(5))
 
     return df_result
 
